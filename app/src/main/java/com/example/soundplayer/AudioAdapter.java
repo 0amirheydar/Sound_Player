@@ -9,7 +9,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
@@ -19,15 +18,22 @@ public class AudioAdapter extends RecyclerView.Adapter<AudioAdapter.ViewHolder> 
     private List<AudioFile> filteredList;
     private OnItemClickListener listener;
     private int highlightedIndex = -1;
+    private int normalStrokeColor;
+    private int highlightedStrokeColor;
 
     public interface OnItemClickListener {
         void onItemClick(AudioFile audioFile, int originalIndex);
     }
 
-    public AudioAdapter(List<AudioFile> audioList, OnItemClickListener listener) {
+    public AudioAdapter(List<AudioFile> audioList,
+                        OnItemClickListener listener,
+                        int normalStrokeColor,
+                        int highlightedStrokeColor) {
         this.originalList = new ArrayList<>(audioList);
         this.filteredList = new ArrayList<>(audioList);
         this.listener = listener;
+        this.normalStrokeColor = normalStrokeColor;
+        this.highlightedStrokeColor = highlightedStrokeColor;
     }
 
     @NonNull
@@ -50,9 +56,9 @@ public class AudioAdapter extends RecyclerView.Adapter<AudioAdapter.ViewHolder> 
         drawable.setColor(Color.TRANSPARENT);
 
         if (position == highlightedIndex) {
-            drawable.setStroke(4, Color.parseColor("#FF6200EE"));
+            drawable.setStroke(4, highlightedStrokeColor);
         } else {
-            drawable.setStroke(1, Color.parseColor("#33FFFFFF"));
+            drawable.setStroke(1, normalStrokeColor);
         }
 
         holder.itemView.setBackground(drawable);
@@ -93,7 +99,7 @@ public class AudioAdapter extends RecyclerView.Adapter<AudioAdapter.ViewHolder> 
                 originalList.sort((a, b) -> a.getArtist().compareToIgnoreCase(b.getArtist()));
                 break;
             case 2:
-                originalList.sort(Comparator.comparingLong(AudioFile::getDuration));
+                originalList.sort((a, b) -> Long.compare(a.getDuration(), b.getDuration()));
                 break;
         }
         filter(null);

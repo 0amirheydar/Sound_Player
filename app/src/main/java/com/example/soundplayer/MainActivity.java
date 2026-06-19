@@ -2,9 +2,9 @@ package com.example.soundplayer;
 
 import android.Manifest;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -20,14 +20,13 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 import androidx.media3.common.Player;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
-import com.google.android.material.color.DynamicColors;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,11 +59,15 @@ public class MainActivity extends AppCompatActivity {
             R.drawable.ic_repeat_one
     };
 
+    private SharedPreferences prefs;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        DynamicColors.applyToActivityIfAvailable(this);
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        prefs = getSharedPreferences("sound_player_prefs", MODE_PRIVATE);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -81,13 +84,6 @@ public class MainActivity extends AppCompatActivity {
         tvTime = findViewById(R.id.tvTime);
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-
-        if (toolbar.getBackground() instanceof ColorDrawable) {
-            int color = ((ColorDrawable) toolbar.getBackground()).getColor();
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                getWindow().setStatusBarColor(color);
-            }
-        }
 
         btnShuffle.setImageResource(R.drawable.ic_shuffle);
         btnRepeat.setImageResource(REPEAT_ICONS[repeatState]);
@@ -230,12 +226,26 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
+        int normalStroke = ContextCompat.getColor(this, R.color.item_stroke_color);
+        int highlightedStroke = ContextCompat.getColor(this, R.color.highlighted_stroke_color);
         adapter = new AudioAdapter(audioList, (audioFile, originalIndex) -> {
             currentIndex = originalIndex;
             playAudio(audioFile);
             adapter.setHighlightedIndex(originalIndex);
-        });
+        }, normalStroke, highlightedStroke);
         recyclerView.setAdapter(adapter);
+
+        String lastUri = prefs.getString("last_uri", null);
+        if (lastUri != null) {
+            for (int i = 0; i < audioList.size(); i++) {
+                if (audioList.get(i).getUri().toString().equals(lastUri)) {
+                    currentIndex = i;
+                    adapter.setHighlightedIndex(i);
+                    break;
+                }
+            }
+        }
+
         Toast.makeText(this, "Loaded " + audioList.size() + " audio files", Toast.LENGTH_SHORT).show();
     }
 

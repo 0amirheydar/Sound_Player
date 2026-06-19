@@ -6,4 +6,5 @@
     <color name="text_color_primary">#FF000000</color>
     <color name="text_color_secondary">#FF666666</color>
     <color name="item_stroke_color">#FFCCCCCC</color>
+    <color name="highlighted_stroke_color">#FF6200EE</color>
 </resources>
